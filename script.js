@@ -11,10 +11,71 @@ const calculator = {
 function updateDisplay() {
     display.value = calculator.displayValue;
     calculator.displayValue = display.value;
-    // console.log(calculator.displayValue);
 }
 
 updateDisplay();
+
+function inputDigit(digit) {
+    const {displayValue, waitingForSecondOperand} = calculator;
+    if (waitingForSecondOperand) {
+        calculator.displayValue = digit;
+        calculator.waitingForSecondOperand = false;
+    } else {
+        calculator.displayValue = displayValue === '0' ? digit : displayValue + digit;
+    }
+}
+
+function inputDecimal(dot) {
+    if(calculator.waitingForSecondOperand) {
+        calculator.displayValue = '0.'
+        calculator.waitingForSecondOperand = false;
+        return;
+    }
+    if (!calculator.displayValue.includes(dot)) {
+        calculator.displayValue += dot;
+    }
+}
+
+function handleOperator (nextOperator) {
+    const {displayValue, firstOperand, operator} = calculator;
+    const inputValue = parseFloat(displayValue);
+
+    if (operator && calculator.waitingForSecondOperand) {
+        calculator.operator = nextOperator;
+        return;
+    }
+
+    if(calculator.firstOperand === null && !isNaN(inputValue)) {
+        calculator.firstOperand = inputValue;
+    } else if(operator) {
+        const result = calculate(firstOperand, inputValue, operator);
+        calculator.displayValue = `${parseFloat(result.toFixed(7))}`;
+        calculator.firstOperand = result;
+    }
+    calculator.waitingForSecondOperand = true;
+    calculator.operator = nextOperator;
+}
+
+function calculate(firstOperand, secondOperand, operator) {
+    if (operator === '+') {
+        return firstOperand + secondOperand;
+    } else if (operator === '-') {
+        return firstOperand - secondOperand;
+    } else if (operator === '*') {
+        return firstOperand * secondOperand;
+    } else if (operator === '/') {
+        return firstOperand / secondOperand;
+    }
+
+    return secondOperand;
+}
+
+function resetCalculator() {
+    calculator.displayValue = '0';
+    calculator.firstOperand = null;
+    calculator.waitingForSecondOperand = false;
+    calculator.operator = null;
+}
 
 keys.addEventListener('click', handleKeyEvents);
 
@@ -22,9 +83,7 @@ function handleKeyEvents(event) {
     const {target} = event;
     const {value} = target;
 
-    if (!target.matches('button')) {
-        return;
-    }
+    if (!target.matches('button')) return;
 
     switch (value) {
         case '+':
@@ -47,68 +106,3 @@ function handleKeyEvents(event) {
     }
     updateDisplay();
 }
-
-function inputDigit(digit) {
-    const {displayValue, waitingForSecondOperand} = calculator;
-    if (waitingForSecondOperand === true) {
-        calculator.displayValue = digit;
-        calculator.waitingForSecondOperand = false;
-    } else {
-        calculator.displayValue = displayValue === '0' ? digit : displayValue + digit;
-    }
-    console.log(calculator.displayValue);
-}
-
-function inputDecimal(dot) {
-    if(calculator.waitingForSecondOperand === true) {
-        calculator.displayValue = '0.'
-        calculator.waitingForSecondOperand = false;
-        return;
-    }
-    if (!calculator.displayValue.includes(dot)) {
-        calculator.displayValue += dot;
-    }
-}
-
-function handleOperator (nextOperator) {
-    const {displayValue, firstOperand, operator} = calculator;
-    const inputValue = parseFloat(displayValue);
-
-    if (operator && calculator.waitingForSecondOperand) {
-        calculator.operator = nextOperator;
-        console.log(calculator);
-        return;
-    }
-
-    if(calculator.firstOperand === null && !isNaN(inputValue)) {
-        calculator.firstOperand = inputValue;
-    } else if(operator) {
-        const result = calculate(firstOperand, inputValue, operator);
-        calculator.displayValue = `${parseFloat(result.toFixed(7))}`;
-        calculator.firstOperand = result;
-    }
-    calculator.waitingForSecondOperand = true;
-    calculator.operator = nextOperator;
-    console.log(calculator);
-}
-
-function calculate(firstOperand, secondOperand, operator) {
-    if (operator === '+') {
-        return firstOperand + secondOperand;
-    } else if (operator === '-') {
-        return firstOperand - secondOperand;
-    } else if (operator === '*') {
-        return firstOperand * secondOperand;
-    } else if (operator === '/') {
-        return firstOperand / secondOperand;
-    }
-
-    return secondOperand;
-}
-
- function resetCalculator() {
-    calculator.displayValue = '0';
-    calculator.firstOperand = null;
-    calculator.waitingForSecondOperand = false;
-    calculator.operator = null;
- }
